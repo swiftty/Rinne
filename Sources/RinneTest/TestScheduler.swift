@@ -1,5 +1,16 @@
 import Combine
 
+///
+///
+///
+public typealias TestSchedulerOf<Scheduler> = TestScheduler<
+    Scheduler.SchedulerTimeType,
+    Scheduler.SchedulerOptions
+> where Scheduler: Combine.Scheduler
+
+///
+///
+///
 public final class TestScheduler<SchedulerTimeType, SchedulerOptions>: Scheduler
 where SchedulerTimeType: Strideable,
       SchedulerTimeType.Stride: SchedulerTimeIntervalConvertible {
@@ -52,7 +63,7 @@ where SchedulerTimeType: Strideable,
     }
 
     private func enqueue(tick: Tick, date: SchedulerTimeType, action: @escaping () -> Void) {
-
+        queue.append((tick, date, action))
     }
 
     private func dequeue(for tick: Tick) {
@@ -72,7 +83,11 @@ extension TestScheduler {
         }
     }
 
-    public func consume(until end: SchedulerTimeType) {
+    public func consume(until interval: SchedulerTimeType.Stride) {
+        consume(until: now.advanced(by: interval))
+    }
+
+    private func consume(until end: SchedulerTimeType) {
         while now <= end {
             queue.sort(by: { ($0.date, $0.tick) < ($1.date, $1.tick) })
 
