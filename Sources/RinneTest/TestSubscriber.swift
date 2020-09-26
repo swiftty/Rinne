@@ -22,7 +22,7 @@ public final class TestSubscriber<Input, Failure: Error, Stride>: Subscriber, Ca
         let start = scheduler.now
         appendEvent = { [weak self, weak scheduler] event in
             guard let scheduler = scheduler else { return }
-            self?.events.append(.init(time: scheduler.now.distance(to: start), value: event))
+            self?.events.append(.init(time: start.distance(to: scheduler.now), value: event))
         }
     }
 
