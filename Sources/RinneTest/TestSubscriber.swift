@@ -39,3 +39,13 @@ public final class TestSubscriber<Input, Failure: Error>: Subscriber, Cancellabl
 }
 
 extension TestSubscriber.Event: Equatable where Input: Equatable, Failure: Equatable {}
+
+extension TestSubscriber.Event: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        switch self {
+        case .next(let next): return ".next(\(next))"
+        case .finished: return ".finished"
+        case .failure(let error): return ".failure(\(error))"
+        }
+    }
+}
