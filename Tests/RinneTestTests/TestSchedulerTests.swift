@@ -6,8 +6,8 @@ final class RinneTestTests: XCTestCase {
     var cancellables: Set<AnyCancellable> = []
 
     func testConsumeByStep() {
-        let scheduler = TestSchedulerOf<DispatchQueue>(now: .init(.now()))
-
+        let scheduler = DispatchQueue.testScheduler
+        
         var value: Int?
         Just(1)
             .delay(for: .milliseconds(300), scheduler: scheduler)
@@ -30,7 +30,7 @@ final class RinneTestTests: XCTestCase {
     }
 
     func testConsume() {
-        let scheduler = TestSchedulerOf<DispatchQueue>(now: .init(.now()))
+        let scheduler = DispatchQueue.testScheduler
 
         var value: Int?
         Just(1)
@@ -50,7 +50,7 @@ final class RinneTestTests: XCTestCase {
     }
 
     func testIntervalOrdering() {
-        let scheduler = TestSchedulerOf<DispatchQueue>(now: .init(.now()))
+        let scheduler = DispatchQueue.testScheduler
 
         var values: [Int] = []
         var localCancellables: Set<AnyCancellable> = []

@@ -83,8 +83,8 @@ extension TestScheduler {
         }
     }
 
-    public func consume(until interval: SchedulerTimeType.Stride) {
-        consume(until: now.advanced(by: interval))
+    public func consume(until stride: SchedulerTimeType.Stride) {
+        consume(until: now.advanced(by: stride))
     }
 
     private func consume(until end: SchedulerTimeType) {
