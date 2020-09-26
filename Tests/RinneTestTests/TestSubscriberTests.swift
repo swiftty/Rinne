@@ -6,7 +6,7 @@ final class TestSubscriberTests: XCTestCase {
     func testSubscribeWithFinished() {
         let scheduler = DispatchQueue.testScheduler
 
-        let result = TestSubscriber<Int, Never>()
+        let result = scheduler.createSubscriber(input: Int.self, failure: Never.self)
 
         Record(output: [1, 2, 3, 4], completion: .finished)
             .receive(on: scheduler)
@@ -17,11 +17,11 @@ final class TestSubscriberTests: XCTestCase {
         scheduler.consume()
 
         XCTAssertEqual(result.events, [
-            .next(1),
-            .next(2),
-            .next(3),
-            .next(4),
-            .finished
+            .next(1, at: 0),
+            .next(2, at: 0),
+            .next(3, at: 0),
+            .next(4, at: 0),
+            .finished(at: 0)
         ])
     }
 
@@ -30,7 +30,7 @@ final class TestSubscriberTests: XCTestCase {
 
         let scheduler = DispatchQueue.testScheduler
 
-        let result = TestSubscriber<Int, Failure>()
+        let result = scheduler.createSubscriber(input: Int.self, failure: Failure.self)
 
         Record(output: [1, 2, 3, 4], completion: .failure(Failure()))
             .receive(on: scheduler)
@@ -41,11 +41,11 @@ final class TestSubscriberTests: XCTestCase {
         scheduler.consume()
 
         XCTAssertEqual(result.events, [
-            .next(1),
-            .next(2),
-            .next(3),
-            .next(4),
-            .failure(Failure())
+            .next(1, at: 0),
+            .next(2, at: 0),
+            .next(3, at: 0),
+            .next(4, at: 0),
+            .failure(Failure(), at: 0)
         ])
     }
 }

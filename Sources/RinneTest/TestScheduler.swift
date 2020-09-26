@@ -78,7 +78,7 @@ where SchedulerTimeType: Strideable,
 
 extension TestScheduler {
     public func consume() {
-        while let date = queue.first?.date {
+        while let date = queue.last?.date {
             consume(until: date)
         }
     }
@@ -91,7 +91,7 @@ extension TestScheduler {
         while now <= end {
             queue.sort(by: { ($0.date, $0.tick) < ($1.date, $1.tick) })
 
-            guard let next = queue.first?.date, end >= next else {
+            guard let next = queue.first?.date, next <= end else {
                 now = end
                 return
             }
@@ -103,5 +103,24 @@ extension TestScheduler {
                 action()
             }
         }
+    }
+}
+
+extension TestScheduler {
+    public func schedule(at stride: SchedulerTimeType.Stride,
+                         _ action: @escaping () -> Void) {
+        schedule(after: now.advanced(by: stride), action)
+    }
+}
+
+extension TestScheduler {
+    public func createSubscriber<Input, Failure>(input: Input.Type,
+                                                 failure: Failure.Type)
+    -> TestSubscriber<
+        Input,
+        Failure,
+        SchedulerTimeType.Stride
+    > {
+        .init(scheduler: self)
     }
 }
