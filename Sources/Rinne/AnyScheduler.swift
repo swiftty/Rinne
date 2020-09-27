@@ -15,20 +15,26 @@ public final class AnyScheduler<SchedulerTimeType, SchedulerOptions>: Scheduler
 where SchedulerTimeType: Strideable,
       SchedulerTimeType.Stride: SchedulerTimeIntervalConvertible {
 
+    @inlinable
     public var now: SchedulerTimeType { box.now }
+
+    @inlinable
     public var minimumTolerance: SchedulerTimeType.Stride { box.minimumTolerance }
 
+    @inlinable
     public init<S: Scheduler>(_ scheduler: S)
     where SchedulerTimeType == S.SchedulerTimeType,
           SchedulerOptions == S.SchedulerOptions {
-        box = AnySchedulerBox(scheduler)
+        box = __AnySchedulerBox(scheduler)
     }
 
+    @inlinable
     public func schedule(options: SchedulerOptions?,
                          _ action: @escaping () -> Void) {
         box.schedule(options: options, action)
     }
 
+    @inlinable
     public func schedule(after date: SchedulerTimeType,
                          tolerance: SchedulerTimeType.Stride,
                          options: SchedulerOptions?,
@@ -39,6 +45,7 @@ where SchedulerTimeType: Strideable,
                      action)
     }
 
+    @inlinable
     public func schedule(after date: SchedulerTimeType,
                          interval: SchedulerTimeType.Stride,
                          tolerance: SchedulerTimeType.Stride,
@@ -52,22 +59,29 @@ where SchedulerTimeType: Strideable,
     }
 
     // MARK:
-    private let box: _AnySchedulerBox<SchedulerTimeType, SchedulerOptions>
+    @usableFromInline
+    let box: _AnySchedulerBox<SchedulerTimeType, SchedulerOptions>
 }
 
-// MARK: - private
-private class _AnySchedulerBox<SchedulerTimeType, SchedulerOptions>: Scheduler
+// MARK: - impl -
+@usableFromInline
+class _AnySchedulerBox<SchedulerTimeType, SchedulerOptions>: Scheduler
 where SchedulerTimeType: Strideable,
       SchedulerTimeType.Stride: SchedulerTimeIntervalConvertible {
 
+    @usableFromInline
     var now: SchedulerTimeType { fatalError() }
+
+    @usableFromInline
     var minimumTolerance: SchedulerTimeType.Stride { fatalError() }
 
+    @usableFromInline
     func schedule(options: SchedulerOptions?,
                   _ action: @escaping () -> Void) {
         fatalError()
     }
 
+    @usableFromInline
     func schedule(after date: SchedulerTimeType,
                   tolerance: SchedulerTimeType.Stride,
                   options: SchedulerOptions?,
@@ -75,6 +89,7 @@ where SchedulerTimeType: Strideable,
         fatalError()
     }
 
+    @usableFromInline
     func schedule(after date: SchedulerTimeType,
                   interval: SchedulerTimeType.Stride,
                   tolerance: SchedulerTimeType.Stride,
@@ -84,24 +99,35 @@ where SchedulerTimeType: Strideable,
     }
 }
 
-private final class AnySchedulerBox<S: Scheduler>: _AnySchedulerBox<S.SchedulerTimeType, S.SchedulerOptions> {
+@usableFromInline
+final class __AnySchedulerBox<S: Scheduler>: _AnySchedulerBox<S.SchedulerTimeType, S.SchedulerOptions> {
+    @usableFromInline
     typealias SchedulerTimeType = S.SchedulerTimeType
+
+    @usableFromInline
     typealias SchedulerOptions = S.SchedulerOptions
 
+    @usableFromInline
     override var now: S.SchedulerTimeType { scheduler.now }
+
+    @usableFromInline
     override var minimumTolerance: S.SchedulerTimeType.Stride { scheduler.minimumTolerance }
 
+    @usableFromInline
     let scheduler: S
 
+    @usableFromInline
     init(_ scheduler: S) {
         self.scheduler = scheduler
     }
 
+    @usableFromInline
     override func schedule(options: SchedulerOptions?,
                            _ action: @escaping () -> Void) {
         scheduler.schedule(options: options, action)
     }
 
+    @usableFromInline
     override func schedule(after date: SchedulerTimeType,
                            tolerance: SchedulerTimeType.Stride,
                            options: SchedulerOptions?,
@@ -112,6 +138,7 @@ private final class AnySchedulerBox<S: Scheduler>: _AnySchedulerBox<S.SchedulerT
                            action)
     }
 
+    @usableFromInline
     override func schedule(after date: SchedulerTimeType,
                            interval: SchedulerTimeType.Stride,
                            tolerance: SchedulerTimeType.Stride,
