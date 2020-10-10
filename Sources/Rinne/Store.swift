@@ -35,7 +35,7 @@ extension _StoreType {
 
 extension _StoreType {
     public func _attach(environment: Any) {
-        guard let store = self as? _Store<State, Action, Environment>,
+        guard let store = self as? _Store<State, Action, Environment>, !store.isAttached,
               let environment = environment as? Environment else { return }
 
         Publishers
@@ -106,8 +106,11 @@ open class _Store<State, Action, Environment> {
     var cancellables: Set<AnyCancellable> = []
     var effectCancellables: [UUID: AnyCancellable] = [:]
 
+    var isAttached = false
+
     public required init(initialState: State, environment: Environment) {
         state = initialState
         (self as! _AnyStoreType)._attach(environment: environment)
+        isAttached = true
     }
 }
