@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-public typealias Store<S: _StoreType> = _Store<S.State, S.Action, S.Environment> & _StoreType
+public typealias Store<S: _StoreType> = _Store<S.State, S.Mutation, S.Action, S.Environment> & _StoreType
 
 ///
 ///
@@ -16,96 +16,61 @@ public protocol _AnyStoreType: AnyObject {
 public protocol _StoreType: _AnyStoreType {
     associatedtype State
     associatedtype Action
+    associatedtype Mutation
     associatedtype Environment
 
-    func reduce(state: inout State, action: Action, environment: Environment) -> Effect<Action, Never>
+    func mutate(action: Action, environment: Environment) -> Effect<Mutation, Never>
 
-    func poll(environment: Environment) -> Effect<Action, Never>
-    func poll(state: Published<State>.Publisher, environment: Environment) -> Effect<Action, Never>
-    func poll(action: Effect<Action, Never>, environment: Environment) -> Effect<Action, Never>
+    func reduce(state: inout State, mutation: Mutation, environment: Environment)
+
+    func poll(environment: Environment) -> Effect<Mutation, Never>
+    func poll(state: Published<State>.Publisher, environment: Environment) -> Effect<Mutation, Never>
 }
 
 extension _StoreType {
-    public func poll(environment: Environment) -> Effect<Action, Never> { nil }
+    public func poll(environment: Environment) -> Effect<Mutation, Never> { nil }
 
-    public func poll(state: Published<State>.Publisher, environment: Environment) -> Effect<Action, Never> { nil }
-
-    public func poll(action: Effect<Action, Never>, environment: Environment) -> Effect<Action, Never> { action }
+    public func poll(state: Published<State>.Publisher, environment: Environment) -> Effect<Mutation, Never> { nil }
 }
 
 extension _StoreType {
+    private typealias _Store = Rinne._Store<State, Mutation, Action, Environment>
+
     public func _attach(environment: Any) {
-        guard let store = self as? _Store<State, Action, Environment>, !store.isAttached,
+        guard let store = self as? _Store, !store.isAttached,
               let environment = environment as? Environment else { return }
 
         Publishers
             .Merge3(
                 poll(environment: environment),
                 poll(state: store.$state, environment: environment),
-                poll(action: store.action.eraseToEffect(), environment: environment))
+                store.action.flatMap { [weak self] action in
+                    self?.mutate(action: action, environment: environment) ?? .none
+                }
+            )
             .receive(on: MainThreadScheduler())
-            .sink { [weak self] action in
-                self?.perform(action: action, environment: environment)
+            .sink { [weak self] mutation in
+                self?.perform(mutation: mutation, environment: environment)
             }
             .store(in: &store.cancellables)
     }
 
-    private func perform(action: Action, environment: Environment) {
-        guard let store = self as? _Store<State, Action, Environment> else { return }
+    private func perform(mutation: Mutation, environment: Environment) {
+        guard let store = self as? _Store else { return }
 
-        if !store.isSending {
-            store.synchronousActionsToSend.append(action)
-        } else {
-            store.bufferedActions.append(action)
-            return
-        }
-
-        while !store.synchronousActionsToSend.isEmpty || !store.bufferedActions.isEmpty {
-            let action = !store.synchronousActionsToSend.isEmpty
-                ? store.synchronousActionsToSend.removeFirst()
-                : store.bufferedActions.removeFirst()
-
-            store.isSending = true
-            let effect = reduce(state: &store.state, action: action, environment: environment)
-            store.isSending = false
-
-            var didComplete = false
-            let uuid = UUID()
-
-            var isProcessingEffects = true
-            let cancellable = effect.sink { [weak store] _ in
-                didComplete = true
-                store?.effectCancellables[uuid] = nil
-            } receiveValue: { [weak store, weak self] action in
-                if isProcessingEffects {
-                    store?.synchronousActionsToSend.append(action)
-                } else {
-                    self?.perform(action: action, environment: environment)
-                }
-            }
-            isProcessingEffects = false
-
-            if !didComplete {
-                store.effectCancellables[uuid] = cancellable
-            }
-        }
+        reduce(state: &store.state, mutation: mutation, environment: environment)
     }
 }
 
 ///
 ///
 ///
-open class _Store<State, Action, Environment> {
+open class _Store<State, Mutation, Action, Environment> {
     @Published public internal(set) var state: State
 
     public let action = PassthroughSubject<Action, Never>()
 
-    var isSending = false
-    var synchronousActionsToSend: [Action] = []
-    var bufferedActions: [Action] = []
     var cancellables: Set<AnyCancellable> = []
-    var effectCancellables: [UUID: AnyCancellable] = [:]
-
     var isAttached = false
 
     public required init(initialState: State, environment: Environment) {

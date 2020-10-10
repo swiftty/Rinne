@@ -38,6 +38,10 @@ extension Effect {
             .eraseToEffect()
     }
 
+    public static func just(_ value: Output) -> Self {
+        .init(value: value)
+    }
+
     public static func future(_ completion: @escaping (@escaping (Result<Output, Failure>) -> Void) -> Void) -> Self {
         Deferred {
             Future { callback in
