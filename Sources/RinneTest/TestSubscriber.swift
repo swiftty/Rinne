@@ -12,7 +12,7 @@ public final class TestSubscriber<Input, Failure: Error, Stride>: Subscriber, Ca
         case failure(Failure)
     }
 
-    public private(set) var events: [Record] = []
+    public private(set) var events = Array<Record>()
 
     private var appendEvent: (Event) -> Void = { _ in }
     private var subscription: Subscription?
@@ -53,6 +53,52 @@ public final class TestSubscriber<Input, Failure: Error, Stride>: Subscriber, Ca
     }
 }
 
+extension TestSubscriber {
+    public struct Array<Element>: RandomAccessCollection, ExpressibleByArrayLiteral {
+        public var startIndex: Int { raw.startIndex }
+        public var endIndex: Int { raw.endIndex }
+
+        public subscript(position: Int) -> Element {
+            get { raw[position] }
+            set { raw[position] = newValue }
+        }
+
+        public init(arrayLiteral elements: Element...) {
+            raw = elements
+        }
+
+        public func index(after i: Int) -> Int { raw.index(after: i) }
+
+        public mutating func append(_ newElement: Element) { raw.append(newElement) }
+
+
+        private var raw: [Element] = []
+    }
+}
+
+extension TestSubscriber.Array: Equatable where Element: Equatable {}
+extension TestSubscriber.Array: Hashable where Element: Hashable {}
+
+extension TestSubscriber.Array: CustomDebugStringConvertible where Element == TestSubscriber.Record {
+    public var debugDescription: String {
+        var str = ""
+        str += "\n"
+        for e in dropLast() {
+            str += """
+              ┣ \(e.value)
+              ┃    ┗ @ \(e.time),\n
+            """
+        }
+        if let last = last {
+            str += """
+              ┗ \(last.value)
+                     ┗ @ \(last.time)\n
+            """
+        }
+        return str
+    }
+}
+
 // MARK: - Record
 extension TestSubscriber.Record: Equatable where Input: Equatable, Failure: Equatable, Stride: Equatable {
     public static func next(_ input: Input, at time: Stride) -> Self {
@@ -65,12 +111,6 @@ extension TestSubscriber.Record: Equatable where Input: Equatable, Failure: Equa
 
     public static func failure(_ error: Failure, at time: Stride) -> Self {
         self.init(time: time, value: .failure(error))
-    }
-}
-
-extension TestSubscriber.Record: CustomDebugStringConvertible {
-    public var debugDescription: String {
-        "\(value.debugDescription) @ \(time)"
     }
 }
 
