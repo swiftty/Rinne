@@ -57,8 +57,8 @@ private class MyStore: Store<MyStore> {
     }
 }
 
-final class RinneTests: XCTestCase {
-    func testExample() {
+final class StoreTests: XCTestCase {
+    func testStateFlow() {
         let env = Environment()
         let store = MyStore(initialState: .init(value: 0), environment: env)
 
@@ -90,6 +90,6 @@ final class RinneTests: XCTestCase {
     }
 
     static var allTests = [
-        ("testExample", testExample),
+        ("testStateFlow", testStateFlow),
     ]
 }
