@@ -107,7 +107,7 @@ extension TestScheduler {
 }
 
 extension TestScheduler {
-    public func schedule(at stride: SchedulerTimeType.Stride,
+    public func register(at stride: SchedulerTimeType.Stride,
                          _ action: @escaping () -> Void) {
         schedule(after: now.advanced(by: stride), action)
     }

@@ -45,9 +45,13 @@ private class MyStore: Store<MyStore> {
                     }
                     .filter { $0 > 5 }
                     .map { _ in Mutation.setValue(0) },
-                state.map(\.value)
+                state
+                    .flatMapLatest {
+                        Just($0.value)
+                            .delay(for: .seconds(5), scheduler: environment.scheduler)
+                    }
                     .filter { $0 > 100 }
-                    .map { _ in Mutation.setValue(50) }
+                    .map { _ in Mutation.setValue(1) }
             )
             .eraseToEffect()
     }
@@ -57,31 +61,32 @@ final class RinneTests: XCTestCase {
     func testExample() {
         let env = Environment()
         let store = MyStore(initialState: .init(value: 0), environment: env)
-        XCTAssertEqual(store.state.value, 0)
+
+        let values = env.scheduler.createSubscriber(input: Int.self, failure: Never.self)
+        store.$state
+            .map(\.value)
+            .receive(subscriber: values)
 
         store.action.send(.setValue(10))
-
-        XCTAssertEqual(store.state.value, 10)
-
         env.scheduler.consume(until: .seconds(10))
-
-        XCTAssertEqual(store.state.value, 0)
-
         store.action.send(.setValue(20))
-
-        XCTAssertEqual(store.state.value, 20)
-
         env.scheduler.consume(until: .seconds(9))
-
-        XCTAssertEqual(store.state.value, 20)
-
         store.action.send(.setValue(5))
-
-        XCTAssertEqual(store.state.value, 5)
-
         env.scheduler.consume(until: .seconds(1))
+        store.action.send(.setValue(200))
+        env.scheduler.consume(until: .seconds(5))
 
-        XCTAssertEqual(store.state.value, 5)
+        env.scheduler.consume()
+
+        XCTAssertEqual(values.events, [
+            .next(0, at: .seconds(0)),
+            .next(10, at: .seconds(0)),
+            .next(0, at: .seconds(10)),
+            .next(20, at: .seconds(10)),
+            .next(5, at: .seconds(19)),
+            .next(200, at: .seconds(20)),
+            .next(1, at: .seconds(25))
+        ])
     }
 
     static var allTests = [
