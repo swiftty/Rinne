@@ -1,8 +1,7 @@
 import XCTest
-@testable import Rinne
+import Rinne
 
 private class MyStore: Store<MyStore> {
-
     enum Action {
         case setValue(Int)
     }
@@ -10,7 +9,6 @@ private class MyStore: Store<MyStore> {
         var value: Int
     }
     typealias Environment = Void
-
 
     func reduce(state: inout State, action: Action, environment: Environment) -> Effect<Action, Never> {
         switch action {

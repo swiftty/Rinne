@@ -21,28 +21,28 @@ public protocol _StoreType: _AnyStoreType {
     func reduce(state: inout State, action: Action, environment: Environment) -> Effect<Action, Never>
 
     func poll(environment: Environment) -> Effect<Action, Never>
-    func poll(state: Published<State>.Publisher) -> Effect<Action, Never>
-    func poll(action: Effect<Action, Never>) -> Effect<Action, Never>
+    func poll(state: Published<State>.Publisher, environment: Environment) -> Effect<Action, Never>
+    func poll(action: Effect<Action, Never>, environment: Environment) -> Effect<Action, Never>
 }
 
 extension _StoreType {
     public func poll(environment: Environment) -> Effect<Action, Never> { nil }
 
-    public func poll(state: Published<State>.Publisher) -> Effect<Action, Never> { nil }
+    public func poll(state: Published<State>.Publisher, environment: Environment) -> Effect<Action, Never> { nil }
 
-    public func poll(action: Effect<Action, Never>) -> Effect<Action, Never> { action }
+    public func poll(action: Effect<Action, Never>, environment: Environment) -> Effect<Action, Never> { action }
 }
 
 extension _StoreType {
-    func _attach(environment: Any) {
+    public func _attach(environment: Any) {
         guard let store = self as? _Store<State, Action, Environment>,
               let environment = environment as? Environment else { return }
 
         Publishers
             .Merge3(
                 poll(environment: environment),
-                poll(state: store.$state),
-                poll(action: store.action.eraseToEffect()))
+                poll(state: store.$state, environment: environment),
+                poll(action: store.action.eraseToEffect(), environment: environment))
             .receive(on: MainThreadScheduler())
             .sink { [weak self] action in
                 self?.perform(action: action, environment: environment)
@@ -95,7 +95,7 @@ extension _StoreType {
 ///
 ///
 ///
-public class _Store<State, Action, Environment> {
+open class _Store<State, Action, Environment> {
     @Published public internal(set) var state: State
 
     public let action = PassthroughSubject<Action, Never>()
