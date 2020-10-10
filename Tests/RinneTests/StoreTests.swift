@@ -36,24 +36,22 @@ private class MyStore: Store<MyStore> {
     }
 
     func poll(state: Published<State>.Publisher, environment: Environment) -> Effect<Mutation, Never> {
-        Publishers
-            .Merge(
-                state
-                    .flatMapLatest {
-                        Just($0.value)
-                            .delay(for: .seconds(10), scheduler: environment.scheduler)
-                    }
-                    .filter { $0 > 5 }
-                    .map { _ in Mutation.setValue(0) },
-                state
-                    .flatMapLatest {
-                        Just($0.value)
-                            .delay(for: .seconds(5), scheduler: environment.scheduler)
-                    }
-                    .filter { $0 > 100 }
-                    .map { _ in Mutation.setValue(1) }
-            )
-            .eraseToEffect()
+        Effect.merge(
+            state
+                .flatMapLatest {
+                    Just($0.value)
+                        .delay(for: .seconds(10), scheduler: environment.scheduler)
+                }
+                .filter { $0 > 5 }
+                .map { _ in Mutation.setValue(0) },
+            state
+                .flatMapLatest {
+                    Just($0.value)
+                        .delay(for: .seconds(5), scheduler: environment.scheduler)
+                }
+                .filter { $0 > 100 }
+                .map { _ in Mutation.setValue(1) }
+        )
     }
 }
 
