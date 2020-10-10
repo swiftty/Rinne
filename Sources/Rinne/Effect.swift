@@ -1,5 +1,7 @@
 import Combine
 
+///
+///
 public struct Effect<Output, Failure: Error>: Publisher {
     public let upstream: AnyPublisher<Output, Failure>
 
@@ -24,7 +26,18 @@ extension Effect {
     }
 }
 
+extension Effect: ExpressibleByNilLiteral {
+    public init(nilLiteral: ()) {
+        self = .none
+    }
+}
+
 extension Effect {
+    public static var none: Effect {
+        Empty(completeImmediately: true)
+            .eraseToEffect()
+    }
+
     public static func future(_ completion: @escaping (@escaping (Result<Output, Failure>) -> Void) -> Void) -> Self {
         Deferred {
             Future { callback in
@@ -35,6 +48,9 @@ extension Effect {
     }
 }
 
+///
+///
+///
 extension Publisher {
     public func eraseToEffect() -> Effect<Output, Failure> {
         if let effect = self as? Effect<Output, Failure> {
