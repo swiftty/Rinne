@@ -24,6 +24,10 @@ private class MyStore: Store<MyStore> {
     }
     typealias Mutation = Action
 
+    init(environment: Environment) {
+        super.init(initialState: .init(value: 0), environment: environment)
+    }
+
     func mutate(action: Action, environment: Environment) -> Effect<Mutation, Never> {
         .just(action)
     }
@@ -58,7 +62,7 @@ private class MyStore: Store<MyStore> {
 final class StoreTests: XCTestCase {
     func testStateFlow() {
         let env = Environment()
-        let store = MyStore(initialState: .init(value: 0), environment: env)
+        let store = MyStore(environment: env)
 
         let values = env.scheduler.createSubscriber(input: Int.self, failure: Never.self)
         store.$state

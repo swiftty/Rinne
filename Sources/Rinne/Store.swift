@@ -73,7 +73,7 @@ open class _Store<State, Mutation, Action, Environment> {
     var cancellables: Set<AnyCancellable> = []
     var isAttached = false
 
-    public required init(initialState: State, environment: Environment) {
+    public init(initialState: State, environment: Environment) {
         state = initialState
         (self as! _AnyStoreType)._attach(environment: environment)
         isAttached = true
