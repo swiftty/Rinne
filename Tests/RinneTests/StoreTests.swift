@@ -65,6 +65,8 @@ final class StoreTests: XCTestCase {
             .map(\.value)
             .receive(subscriber: values)
 
+        store.action.send(completion: .finished)
+
         store.action.send(.setValue(10))
         env.scheduler.consume(until: .seconds(10))
         store.action.send(.setValue(20))

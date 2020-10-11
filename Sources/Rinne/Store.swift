@@ -68,7 +68,7 @@ extension _StoreType {
 open class _Store<State, Mutation, Action, Environment> {
     @Published public internal(set) var state: State
 
-    public let action = PassthroughSubject<Action, Never>()
+    public let action = ActionSubject<Action>()
 
     var cancellables: Set<AnyCancellable> = []
     var isAttached = false
