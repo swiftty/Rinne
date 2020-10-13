@@ -65,8 +65,7 @@ final class StoreTests: XCTestCase {
         let store = MyStore(environment: env)
 
         let values = env.scheduler.createSubscriber(input: Int.self, failure: Never.self)
-        store.$state
-            .map(\.value)
+        store.$state.value
             .receive(subscriber: values)
 
         store.action.send(completion: .finished)

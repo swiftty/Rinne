@@ -40,15 +40,18 @@ extension _StoreType {
         guard let store = self as? _Store, !store.isAttached,
               let environment = environment as? Environment else { return }
 
+        let scheduler = MainThreadScheduler()
         Publishers
             .Merge3(
                 poll(environment: environment),
                 poll(state: store.$state, environment: environment),
-                store.action.flatMap { [weak self] action in
-                    self?.mutate(action: action, environment: environment) ?? .none
-                }
+                store.action
+                    .receive(on: scheduler)
+                    .flatMap { [weak self] action in
+                        self?.mutate(action: action, environment: environment) ?? .none
+                    }
             )
-            .receive(on: MainThreadScheduler())
+            .receive(on: scheduler)
             .sink { [weak self] mutation in
                 self?.perform(mutation: mutation, environment: environment)
             }
@@ -79,3 +82,17 @@ open class _Store<State, Mutation, Action, Environment> {
         isAttached = true
     }
 }
+
+
+@dynamicMemberLookup
+public protocol StatePublisher: Publisher {
+    subscript <T>(dynamicMember keyPath: KeyPath<Output, T>) -> Publishers.MapKeyPath<Self, T> { get }
+}
+
+extension StatePublisher {
+    public subscript <T>(dynamicMember keyPath: KeyPath<Output, T>) -> Publishers.MapKeyPath<Self, T> {
+        map(keyPath)
+    }
+}
+
+extension Published.Publisher: StatePublisher {}
