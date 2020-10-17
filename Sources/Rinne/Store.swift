@@ -19,6 +19,10 @@ public protocol _StoreType: _AnyStoreType {
     associatedtype Mutation
     associatedtype Environment
 
+    var action: ActionSubject<Action> { get }
+
+    var state: State { get }
+
     func mutate(action: Action, environment: Environment) -> Effect<Mutation, Never>
 
     func reduce(state: inout State, mutation: Mutation, environment: Environment)

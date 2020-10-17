@@ -92,6 +92,37 @@ final class StoreTests: XCTestCase {
         ])
     }
 
+    func testStateUsingScenario() {
+        let env = Environment()
+
+        let scenario = TestScenario(MyStore(environment: env))
+        scenario(
+            .then {
+                $0.value = 0
+            },
+            .action(.setValue(10)) {
+                $0.value = 10
+            },
+            .do(env.scheduler.consume(until: .seconds(10))) {
+                $0.value = 0
+            },
+            .action(.setValue(20)) {
+                $0.value = 20
+            },
+            .do(env.scheduler.consume(until: .seconds(9))),
+            .action(.setValue(5)) {
+                $0.value = 5
+            },
+            .do(env.scheduler.consume(until: .seconds(1))),
+            .action(.setValue(200)) {
+                $0.value = 200
+            },
+            .do(env.scheduler.consume(until: .seconds(5))) {
+                $0.value = 1
+            }
+        )
+    }
+
     static var allTests = [
         ("testStateFlow", testStateFlow),
     ]
