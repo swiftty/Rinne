@@ -121,7 +121,11 @@ func debugOutput(_ value: Any, indent: Int = 0) -> String {
                 .indent(by: indent)
 
         case (_, nil):
-            return "\(value)".indent(by: indent)
+            let value = "\(value)"
+            if value == "(Function)" {
+                return "\(mirror.subjectType)".indent(by: indent)
+            }
+            return value.indent(by: indent)
 
         default:
             return "\(value)".indent(by: indent)

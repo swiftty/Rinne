@@ -4,6 +4,8 @@ import XCTest
 private struct S {
     var intValue = 0
     var stringValue = "string"
+    var f: (Int) -> String = { $0.description }
+    var f2: ((Int) -> String)? = { $0.description }
     var computed: Int { intValue }
 }
 
@@ -41,6 +43,8 @@ final class DebugTests: XCTestCase {
             "b": 2.2
         ]
         """)
+
+        XCTAssertEqual(debugOutput({ "foo" }), "() -> String")
     }
 
     func testStruct() {
@@ -50,7 +54,9 @@ final class DebugTests: XCTestCase {
         XCTAssertEqual(debugOutput(S()), """
         S(
             intValue: 0,
-            stringValue: "string"
+            stringValue: "string",
+            f: (Int) -> String,
+            f2: (Int) -> String
         )
         """)
     }
