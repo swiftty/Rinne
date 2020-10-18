@@ -11,11 +11,13 @@ public final class TestScenario<Store: _StoreType> {
         self.store = store
     }
 
-    public func callAsFunction(_ steps: Step...) {
-        callAsFunction(steps)
+    public func callAsFunction(_ steps: Step...,
+                               file: StaticString = #filePath, line: UInt = #line) {
+        callAsFunction(steps, file: file, line: line)
     }
 
-    public func callAsFunction(_ steps: [Step]) {
+    public func callAsFunction(_ steps: [Step],
+                               file: StaticString = #filePath, line: UInt = #line) {
         let store = self.store()
         var cancellables: Set<AnyCancellable> = []
         var receivedEvents: [Store.Event] = []
@@ -27,34 +29,38 @@ public final class TestScenario<Store: _StoreType> {
             })
             .store(in: &cancellables)
 
-        for step in steps {
-            func checkReceivedEvent() {
-                if !receivedEvents.isEmpty {
-                    XCTFail("""
-                    Must handle \(receivedEvents.count) received \
-                    event\(receivedEvents.count == 1 ? "" : "s") before performing this step.
+        func checkReceivedEvent(in step: Step? = nil) {
+            if !receivedEvents.isEmpty {
+                XCTFail("""
+                Must handle \(receivedEvents.count) received \
+                event\(receivedEvents.count == 1 ? "" : "s") \
+                \(step == nil ? "remaining in scenario" : "before performing this step").
 
-                    Unhandled events: \(debugOutput(receivedEvents))
-                    """, file: step.file, line: step.line)
-                }
+                Unhandled events: \(debugOutput(receivedEvents))
+                """, file: step?.file ?? file, line: step?.line ?? line)
             }
+        }
+        defer {
+            checkReceivedEvent()
+        }
 
+        for step in steps {
             var checkState = true
 
             do {
                 switch step.kind {
                 case .action(let action, let update):
-                    checkReceivedEvent()
+                    checkReceivedEvent(in: step)
                     store.action.send(action)
                     try update(&expectedState)
 
                 case .do(let work, let then):
-                    checkReceivedEvent()
+                    checkReceivedEvent(in: step)
                     try work()
                     try then(&expectedState)
 
                 case .then(let update):
-                    checkReceivedEvent()
+                    checkReceivedEvent(in: step)
                     try update(&expectedState)
 
                 case .receive(let event):

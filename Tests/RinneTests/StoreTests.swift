@@ -133,7 +133,11 @@ final class StoreTests: XCTestCase {
             .receive(event: .over10(value: 200)),
             .do(env.scheduler.consume(until: .seconds(5))) {
                 $0.value = 1
-            }
+            },
+            .action(.setValue(30)) {
+                $0.value = 30
+            },
+            .receive(event: .over10(value: 30))
         )
     }
 
