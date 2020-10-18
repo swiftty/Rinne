@@ -23,6 +23,7 @@ private class MyStore: Store<MyStore> {
         var value: Int
     }
     typealias Mutation = Action
+    typealias Event = Never
 
     init(environment: Environment) {
         super.init(initialState: .init(value: 0), environment: environment)
@@ -32,11 +33,12 @@ private class MyStore: Store<MyStore> {
         .just(action)
     }
 
-    func reduce(state: inout State, mutation: Action) {
+    func reduce(state: inout State, mutation: Action) -> Effect<Event, Never> {
         switch mutation {
         case .setValue(let value):
             state.value = value
         }
+        return nil
     }
 
     func poll(state: Published<State>.Publisher, environment: Environment) -> Effect<Mutation, Never> {
