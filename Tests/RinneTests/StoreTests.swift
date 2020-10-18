@@ -22,8 +22,11 @@ private class MyStore: Store<MyStore> {
     struct State {
         var value: Int
     }
+    enum Event {
+        case over10(value: Int)
+        case reset0
+    }
     typealias Mutation = Action
-    typealias Event = Never
 
     init(environment: Environment) {
         super.init(initialState: .init(value: 0), environment: environment)
@@ -37,6 +40,12 @@ private class MyStore: Store<MyStore> {
         switch mutation {
         case .setValue(let value):
             state.value = value
+        }
+        if state.value > 10 {
+            return .just(.over10(value: state.value))
+        }
+        if state.value == 0 {
+            return .just(.reset0)
         }
         return nil
     }
@@ -108,9 +117,11 @@ final class StoreTests: XCTestCase {
             .do(env.scheduler.consume(until: .seconds(10))) {
                 $0.value = 0
             },
+            .receive(event: .reset0),
             .action(.setValue(20)) {
                 $0.value = 20
             },
+            .receive(event: .over10(value: 20)),
             .do(env.scheduler.consume(until: .seconds(9))),
             .action(.setValue(5)) {
                 $0.value = 5
@@ -119,6 +130,7 @@ final class StoreTests: XCTestCase {
             .action(.setValue(200)) {
                 $0.value = 200
             },
+            .receive(event: .over10(value: 200)),
             .do(env.scheduler.consume(until: .seconds(5))) {
                 $0.value = 1
             }
