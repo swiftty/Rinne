@@ -32,7 +32,7 @@ private class MyStore: Store<MyStore> {
         .just(action)
     }
 
-    func reduce(state: inout State, mutation: Action, environment: Environment) {
+    func reduce(state: inout State, mutation: Action) {
         switch mutation {
         case .setValue(let value):
             state.value = value

@@ -23,9 +23,9 @@ public protocol _StoreType: _AnyStoreType {
 
     var state: State { get }
 
-    func mutate(action: Action, environment: Environment) -> Effect<Mutation, Never>
+    func reduce(state: inout State, mutation: Mutation)
 
-    func reduce(state: inout State, mutation: Mutation, environment: Environment)
+    func mutate(action: Action, environment: Environment) -> Effect<Mutation, Never>
 
     func poll(environment: Environment) -> Effect<Mutation, Never>
     func poll(state: Published<State>.Publisher, environment: Environment) -> Effect<Mutation, Never>
@@ -57,15 +57,15 @@ extension _StoreType {
             )
             .receive(on: scheduler)
             .sink { [weak self] mutation in
-                self?.perform(mutation: mutation, environment: environment)
+                self?.perform(mutation: mutation)
             }
             .store(in: &store.cancellables)
     }
 
-    private func perform(mutation: Mutation, environment: Environment) {
+    private func perform(mutation: Mutation) {
         guard let store = self as? _Store else { return }
 
-        reduce(state: &store.state, mutation: mutation, environment: environment)
+        reduce(state: &store.state, mutation: mutation)
     }
 }
 
