@@ -18,6 +18,10 @@ let package = Package(
             targets: ["Rinne"]),
 
         .library(
+            name: "RinneSwiftUI",
+            targets: ["RinneSwiftUI"]),
+
+        .library(
             name: "RinneTest",
             targets: ["RinneTest"])
     ],
@@ -34,6 +38,13 @@ let package = Package(
         .testTarget(
             name: "RinneTests",
             dependencies: ["Rinne"]),
+
+        .target(
+            name: "RinneSwiftUI",
+            dependencies: ["Rinne"]),
+        .testTarget(
+            name: "RinneSwiftUITests",
+            dependencies: ["RinneSwiftUI"]),
 
         .target(
             name: "RinneTest",
