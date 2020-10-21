@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-public typealias Store<S: _StoreType> = _Store<S.State, S.Action, S.Mutation, S.Event, S.Environment> & _StoreType
+public typealias Store<S: _StoreType> = _Store<S.State, S.Action, S.Mutation, S.Signal, S.Environment> & _StoreType
 
 ///
 ///
@@ -17,14 +17,14 @@ public protocol _StoreType: _AnyStoreType {
     associatedtype State
     associatedtype Action
     associatedtype Mutation = Action
-    associatedtype Event = Never
+    associatedtype Signal = Never
     associatedtype Environment
 
     var action: ActionSubject<Action> { get }
-    var events: AnyPublisher<Event, Never> { get }
+    var signals: AnyPublisher<Signal, Never> { get }
     var state: State { get }
 
-    func reduce(state: inout State, mutation: Mutation) -> Effect<Event, Never>
+    func reduce(state: inout State, mutation: Mutation) -> Effect<Signal, Never>
     func mutate(action: Action, environment: Environment) -> Effect<Mutation, Never>
 
     func poll(environment: Environment) -> Effect<Mutation, Never>
@@ -38,7 +38,7 @@ extension _StoreType {
 }
 
 extension _StoreType {
-    private typealias _Store = Rinne._Store<State, Action, Mutation, Event, Environment>
+    private typealias _Store = Rinne._Store<State, Action, Mutation, Signal, Environment>
 
     public func _attach(environment: Any) {
         guard let store = self as? _Store, !store.isAttached,
@@ -60,12 +60,12 @@ extension _StoreType {
                 self?.perform(mutation: mutation) ?? .none
             }
             .sink(receiveValue: { [weak store] event in
-                store?._events.send(event)
+                store?._signals.send(event)
             })
             .store(in: &store.cancellables)
     }
 
-    private func perform(mutation: Mutation) -> Effect<Event, Never> {
+    private func perform(mutation: Mutation) -> Effect<Signal, Never> {
         guard let store = self as? _Store else { return nil }
 
         return reduce(state: &store.state, mutation: mutation)
@@ -75,12 +75,12 @@ extension _StoreType {
 ///
 ///
 ///
-open class _Store<State, Action, Mutation, Event, Environment> {
+open class _Store<State, Action, Mutation, Signal, Environment> {
     @Published public internal(set) var state: State
 
     public let action = ActionSubject<Action>()
-    public private(set) lazy var events: AnyPublisher<Event, Never> = _events.eraseToAnyPublisher()
-    let _events = PassthroughSubject<Event, Never>()
+    public private(set) lazy var signals: AnyPublisher<Signal, Never> = _signals.eraseToAnyPublisher()
+    let _signals = PassthroughSubject<Signal, Never>()
 
     var cancellables: Set<AnyCancellable> = []
     var isAttached = false

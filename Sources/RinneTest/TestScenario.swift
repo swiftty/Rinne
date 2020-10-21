@@ -20,10 +20,10 @@ public final class TestScenario<Store: _StoreType> {
                                file: StaticString = #filePath, line: UInt = #line) {
         let store = self.store()
         var cancellables: Set<AnyCancellable> = []
-        var receivedEvents: [Store.Event] = []
+        var receivedEvents: [Store.Signal] = []
         var expectedState = store.state
 
-        store.events
+        store.signals
             .sink(receiveValue: {
                 receivedEvents.append($0)
             })
@@ -158,17 +158,17 @@ extension TestScenario {
             Step(kind: .then(closure), file: file, line: line)
         }
 
-        public static func receive(event: Store.Event,
+        public static func receive(signal: Store.Signal,
                                    file: StaticString = #filePath,
                                    line: UInt = #line) -> Self {
-            Step(kind: .receive(event: event), file: file, line: line)
+            Step(kind: .receive(signal: signal), file: file, line: line)
         }
 
         enum Kind {
             case action(Store.Action, (inout Store.State) throws -> Void)
             case `do`(() throws -> Void, then: (inout Store.State) throws -> Void)
             case then((inout Store.State) throws -> Void)
-            case receive(event: Store.Event)
+            case receive(signal: Store.Signal)
         }
     }
 }

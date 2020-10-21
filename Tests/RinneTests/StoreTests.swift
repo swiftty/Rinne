@@ -22,7 +22,7 @@ private class MyStore: Store<MyStore> {
     struct State {
         var value: Int
     }
-    enum Event {
+    enum Signal {
         case over10(value: Int)
         case reset0
     }
@@ -36,7 +36,7 @@ private class MyStore: Store<MyStore> {
         .just(action)
     }
 
-    func reduce(state: inout State, mutation: Action) -> Effect<Event, Never> {
+    func reduce(state: inout State, mutation: Action) -> Effect<Signal, Never> {
         switch mutation {
         case .setValue(let value):
             state.value = value
@@ -117,11 +117,11 @@ final class StoreTests: XCTestCase {
             .do(env.scheduler.consume(until: .seconds(10))) {
                 $0.value = 0
             },
-            .receive(event: .reset0),
+            .receive(signal: .reset0),
             .action(.setValue(20)) {
                 $0.value = 20
             },
-            .receive(event: .over10(value: 20)),
+            .receive(signal: .over10(value: 20)),
             .do(env.scheduler.consume(until: .seconds(9))),
             .action(.setValue(5)) {
                 $0.value = 5
@@ -130,14 +130,14 @@ final class StoreTests: XCTestCase {
             .action(.setValue(200)) {
                 $0.value = 200
             },
-            .receive(event: .over10(value: 200)),
+            .receive(signal: .over10(value: 200)),
             .do(env.scheduler.consume(until: .seconds(5))) {
                 $0.value = 1
             },
             .action(.setValue(30)) {
                 $0.value = 30
             },
-            .receive(event: .over10(value: 30))
+            .receive(signal: .over10(value: 30))
         )
     }
 
