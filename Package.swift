@@ -37,7 +37,7 @@ let package = Package(
             dependencies: []),
         .testTarget(
             name: "RinneTests",
-            dependencies: ["Rinne"]),
+            dependencies: ["Rinne", "RinneTest"]),
 
         .target(
             name: "RinneSwiftUI",
@@ -48,7 +48,7 @@ let package = Package(
 
         .target(
             name: "RinneTest",
-            dependencies: []),
+            dependencies: ["Rinne"]),
         .testTarget(
             name: "RinneTestTests",
             dependencies: ["RinneTest"]),
