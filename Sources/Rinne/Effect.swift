@@ -6,7 +6,7 @@ public struct Effect<Output, Failure: Error>: Publisher {
     public let upstream: AnyPublisher<Output, Failure>
 
     public func receive<S>(subscriber: S)
-    where S : Subscriber, Failure == S.Failure, Output == S.Input {
+    where S: Subscriber, Failure == S.Failure, Output == S.Input {
         upstream.subscribe(subscriber)
     }
 }

@@ -7,9 +7,7 @@ extension Effect {
 
     public static func future(_ completion: @escaping (@escaping (Result<Output, Failure>) -> Void) -> Void) -> Self {
         Deferred {
-            Future { callback in
-                completion { result in callback(result) }
-            }
+            Future(completion)
         }
         .eraseToEffect()
     }
