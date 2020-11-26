@@ -25,6 +25,8 @@ extension Effect {
     public static func merge<A, B>(_ a: A,
                                    _ b: B) -> Effect<A.Output, A.Failure>
     where A: Publisher, B: Publisher,
+          A.Output == Output,
+          A.Failure == Failure,
           A.Output == B.Output,
           A.Failure == B.Failure {
         Publishers.Merge(a, b).eraseToEffect()
@@ -34,6 +36,8 @@ extension Effect {
                                       _ b: B,
                                       _ c: C) -> Effect<A.Output, A.Failure>
     where A: Publisher, B: Publisher, C: Publisher,
+          A.Output == Output,
+          A.Failure == Failure,
           A.Output == B.Output,
           A.Failure == B.Failure,
           A.Output == C.Output,
@@ -46,6 +50,8 @@ extension Effect {
                                          _ c: C,
                                          _ d: D) -> Effect<A.Output, A.Failure>
     where A: Publisher, B: Publisher, C: Publisher, D: Publisher,
+          A.Output == Output,
+          A.Failure == Failure,
           A.Output == B.Output,
           A.Failure == B.Failure,
           A.Output == C.Output,
@@ -61,6 +67,8 @@ extension Effect {
                                             _ d: D,
                                             _ e: E) -> Effect<A.Output, A.Failure>
     where A: Publisher, B: Publisher, C: Publisher, D: Publisher, E: Publisher,
+          A.Output == Output,
+          A.Failure == Failure,
           A.Output == B.Output,
           A.Failure == B.Failure,
           A.Output == C.Output,
@@ -89,6 +97,8 @@ extension Effect {
     public static func concat<A, B>(_ a: A,
                                     _ b: B) -> Effect<A.Output, A.Failure>
     where A: Publisher, B: Publisher,
+          A.Output == Output,
+          A.Failure == Failure,
           A.Output == B.Output,
           A.Failure == B.Failure {
         a.append(b).eraseToEffect()
@@ -98,6 +108,8 @@ extension Effect {
                                        _ b: B,
                                        _ c: C) -> Effect<A.Output, A.Failure>
     where A: Publisher, B: Publisher, C: Publisher,
+          A.Output == Output,
+          A.Failure == Failure,
           A.Output == B.Output,
           A.Failure == B.Failure,
           A.Output == C.Output,
@@ -110,6 +122,8 @@ extension Effect {
                                           _ c: C,
                                           _ d: D) -> Effect<A.Output, A.Failure>
     where A: Publisher, B: Publisher, C: Publisher, D: Publisher,
+          A.Output == Output,
+          A.Failure == Failure,
           A.Output == B.Output,
           A.Failure == B.Failure,
           A.Output == C.Output,
@@ -125,6 +139,8 @@ extension Effect {
                                              _ d: D,
                                              _ e: E) -> Effect<A.Output, A.Failure>
     where A: Publisher, B: Publisher, C: Publisher, D: Publisher, E: Publisher,
+          A.Output == Output,
+          A.Failure == Failure,
           A.Output == B.Output,
           A.Failure == B.Failure,
           A.Output == C.Output,
