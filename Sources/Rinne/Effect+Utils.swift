@@ -15,7 +15,7 @@ extension Effect {
 
 // MARK: - merge -
 extension Effect {
-    public static func merge<P>(_ ps: P...) -> Effect<P.Output, P.Failure>
+    public static func merge<P>(_ ps: [P]) -> Effect<P.Output, P.Failure>
     where P: Publisher,
           P.Output == Output,
           P.Failure == Failure {
@@ -75,7 +75,7 @@ extension Effect {
 
 // MARK: - concat -
 extension Effect {
-    public static func concat<P>(_ ps: P...) -> Effect<P.Output, P.Failure>
+    public static func concat<P>(_ ps: [P]) -> Effect<P.Output, P.Failure>
     where P: Publisher,
           P.Output == Output,
           P.Failure == Failure {
