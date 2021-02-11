@@ -28,14 +28,11 @@ extension Effect {
 
 extension Effect: ExpressibleByNilLiteral {
     public init(nilLiteral: ()) {
-        self = .none
+        self.init(Empty(completeImmediately: true))
     }
-}
 
-extension Effect {
     public static var none: Effect {
-        Empty(completeImmediately: true)
-            .eraseToEffect()
+        nil
     }
 }
 
