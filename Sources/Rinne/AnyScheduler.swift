@@ -25,7 +25,24 @@ where SchedulerTimeType: Strideable,
     public init<S: Scheduler>(_ scheduler: S)
     where SchedulerTimeType == S.SchedulerTimeType,
           SchedulerOptions == S.SchedulerOptions {
-        box = __AnySchedulerBox(scheduler)
+        if let s = scheduler as? AnyScheduler<S.SchedulerTimeType, S.SchedulerOptions> {
+            box = s.box.copy()
+        } else {
+            box = __AnySchedulerBox(scheduler) { action in
+                action()
+            }
+        }
+    }
+
+    @inlinable
+    public init<S: Scheduler>(_ scheduler: S, worker: @escaping (@escaping () -> Void) -> Void)
+    where SchedulerTimeType == S.SchedulerTimeType,
+          SchedulerOptions == S.SchedulerOptions {
+        if let s = scheduler as? AnyScheduler<S.SchedulerTimeType, S.SchedulerOptions> {
+            box = s.box.copy(with: worker)
+        } else {
+            box = __AnySchedulerBox(scheduler, worker: worker)
+        }
     }
 
     @inlinable
@@ -76,6 +93,9 @@ where SchedulerTimeType: Strideable,
     var minimumTolerance: SchedulerTimeType.Stride { fatalError() }
 
     @usableFromInline
+    func copy(with worker: ((@escaping () -> Void) -> Void)? = nil) -> Self { fatalError() }
+
+    @usableFromInline
     func schedule(options: SchedulerOptions?,
                   _ action: @escaping () -> Void) {
         fatalError()
@@ -117,14 +137,25 @@ final class __AnySchedulerBox<S: Scheduler>: _AnySchedulerBox<S.SchedulerTimeTyp
     let scheduler: S
 
     @usableFromInline
-    init(_ scheduler: S) {
+    let worker: (@escaping () -> Void) -> Void
+
+    @usableFromInline
+    init(_ scheduler: S, worker: @escaping (@escaping () -> Void) -> Void) {
         self.scheduler = scheduler
+        self.worker = worker
+    }
+
+    @usableFromInline
+    override func copy(with newWorker: ((@escaping () -> Void) -> Void)? = nil) -> Self {
+        Self.init(scheduler, worker: newWorker ?? worker)
     }
 
     @usableFromInline
     override func schedule(options: SchedulerOptions?,
                            _ action: @escaping () -> Void) {
-        scheduler.schedule(options: options, action)
+        scheduler.schedule(options: options) { [worker] in
+            worker(action)
+        }
     }
 
     @usableFromInline
@@ -134,8 +165,9 @@ final class __AnySchedulerBox<S: Scheduler>: _AnySchedulerBox<S.SchedulerTimeTyp
                            _ action: @escaping () -> Void) {
         scheduler.schedule(after: date,
                            tolerance: tolerance,
-                           options: options,
-                           action)
+                           options: options) { [worker] in
+            worker(action)
+        }
     }
 
     @usableFromInline
@@ -147,7 +179,8 @@ final class __AnySchedulerBox<S: Scheduler>: _AnySchedulerBox<S.SchedulerTimeTyp
         scheduler.schedule(after: date,
                            interval: interval,
                            tolerance: tolerance,
-                           options: options,
-                           action)
+                           options: options) { [worker] in
+            worker(action)
+        }
     }
 }
